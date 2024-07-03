@@ -2,19 +2,20 @@ package middleware
 
 import (
 	"net/http"
-	"github.com/blackpanther26/mvc/pkg/types"
+
+	"github.com/blackpanther26/mvc/pkg/models"
 )
 
 func IsNotAdmin(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-        userCtx := r.Context().Value("user")
+        userCtx := r.Context().Value("user")    
         if userCtx == nil {
             http.Error(w, "Unauthorized", http.StatusUnauthorized)
             return
         }
 
-        user, ok := userCtx.(types.User)
+        user, ok := userCtx.(models.User)
         if !ok {
             http.Error(w, "Unauthorized", http.StatusUnauthorized)
             return

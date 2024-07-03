@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -30,23 +29,22 @@ func RequireAuth(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			log.Printf("Error parsing token: %v", err)
+			fmt.Printf("Error parsing token: %v", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		if !token.Valid {
-			log.Println("Invalid token")
+			fmt.Println("Invalid token")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-
+		
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			currentTime := float64(time.Now().Unix())
-
 			if expClaim, exists := claims["exp"]; exists {
 				if currentTime > expClaim.(float64) {
-					log.Println("Token has expired")
+					fmt.Println("Token has expired")
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
 				}
@@ -56,7 +54,6 @@ func RequireAuth(next http.Handler) http.Handler {
 			config.DB.First(&user, claims["sub"])
 
 			if user.ID == 0 {
-				log.Println("User not found")
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -64,7 +61,7 @@ func RequireAuth(next http.Handler) http.Handler {
 			ctx := context.WithValue(r.Context(), "user", user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
-			log.Println("No claims found in token")
+			fmt.Println("No claims found in token")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		}
 	})
