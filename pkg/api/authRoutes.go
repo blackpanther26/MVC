@@ -1,4 +1,4 @@
-package routes
+package api
 
 import (
 	"github.com/blackpanther26/mvc/pkg/controllers"
