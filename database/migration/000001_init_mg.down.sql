@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS transactions;
+DROP TABLE IF EXISTS admin_requests;
+DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS users;
