@@ -12,3 +12,4 @@ func main() {
 	api.Start()
 }
 
+// go build -o mvc ./cmd/main.go

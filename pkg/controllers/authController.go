@@ -2,10 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/blackpanther26/mvc/pkg/config"
@@ -16,7 +14,6 @@ import (
 )
 
 func SignupPageHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hi from signup handler")
 	utils.RenderTemplate(w, "signup", nil)
 }
 
@@ -25,42 +22,72 @@ func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		Username string `json:"username" validate:"required"`
-		Password string `json:"password" validate:"required"`
+	if r.Method == http.MethodPost {
+		err := r.ParseForm()
+		if err != nil {
+			utils.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Failed to parse form"})
+			return
+		}
+
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		confirmPassword := r.FormValue("confirm_password")
+
+		if !isPasswordValid(password) && len(password) > 0 {
+			utils.RenderTemplate(w, "signup", map[string]interface{}{
+				"ErrorMessage": "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one digit",
+			})
+			return
+		}
+
+		if password != confirmPassword {
+			utils.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Passwords do not match"})
+			return
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			utils.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Failed to hash password"})
+			return
+		}
+
+		user := models.User{
+			Username:     username,
+			PasswordHash: string(hash),
+		}
+
+		result := config.DB.Create(&user)
+		if result.Error != nil {
+			utils.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Failed to create user"})
+			return
+		}
+
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	} else {
+		utils.RenderTemplate(w, "signup", nil)
+	}
+}
+
+func isPasswordValid(password string) bool {
+	if len(password) < 8 {
+		return false
+	}
+	hasUpperCase := false
+	hasLowerCase := false
+	hasDigit := false
+
+	for _, char := range password {
+		switch {
+		case 'A' <= char && char <= 'Z':
+			hasUpperCase = true
+		case 'a' <= char && char <= 'z':
+			hasLowerCase = true
+		case '0' <= char && char <= '9':
+			hasDigit = true
+		}
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		http.Error(w, `{"error":"Failed to read body"}`, http.StatusBadRequest)
-		return
-	}
-
-	if body.Username == "" || body.Password == "" {
-		http.Error(w, `{"error":"Username and Password are required"}`, http.StatusBadRequest)
-		return
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, `{"error":"Failed to hash password"}`, http.StatusInternalServerError)
-		return
-	}
-
-	user := models.User{
-		Username:     body.Username,
-		PasswordHash: string(hash),
-	}
-
-	result := config.DB.Create(&user)
-	if result.Error != nil {
-		http.Error(w, `{"error":"Failed to create user"}`, http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"message":"Signup successful", "user_id":` + strconv.Itoa(int(user.ID)) + `}`))
+	return hasUpperCase && hasLowerCase && hasDigit
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
