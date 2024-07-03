@@ -96,23 +96,26 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&body)
+	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Failed to read body", http.StatusBadRequest)
+		utils.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Failed to parse form"})
 		return
 	}
+
+	body.Username = r.FormValue("username")
+	body.Password = r.FormValue("password")
 
 	var user models.User
 	config.DB.First(&user, "username =?", body.Username)
 
 	if user.ID == 0 {
-		http.Error(w, "Invalid username or password", http.StatusBadRequest)
+		utils.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Invalid username or password"})
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(body.Password))
 	if err != nil {
-		http.Error(w, "Invalid username or password", http.StatusBadRequest)
+		utils.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Invalid username or password"})
 		return
 	}
 
@@ -136,8 +139,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{Name: "Authorization", Value: tokenString, Expires: time.Now().Add(24 * time.Hour)}
 	http.SetCookie(w, cookie)
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Login successful"}`))
+	if user.IsAdmin {
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/client/", http.StatusSeeOther)
+	}
 }
 
 func Validate(w http.ResponseWriter, r *http.Request) {

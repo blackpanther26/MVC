@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
+	"github.com/blackpanther26/mvc/pkg/utils"
 	"github.com/blackpanther26/mvc/pkg/config"
 	"github.com/blackpanther26/mvc/pkg/models"
 	"github.com/gorilla/mux"
@@ -20,15 +20,11 @@ func ListBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonBooks, err := json.Marshal(books)
-	if err != nil {
-		http.Error(w, "Failed to marshal books", http.StatusInternalServerError)
-		return
+	data := map[string]interface{}{
+		"Books": books,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonBooks)
+	utils.RenderTemplate(w, "clientPortal", data)
 }
 
 func CheckoutBook(w http.ResponseWriter, r *http.Request) {

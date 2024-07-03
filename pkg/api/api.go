@@ -6,7 +6,6 @@ import (
 	"os"
 	"github.com/blackpanther26/mvc/pkg/config"
 	"github.com/gorilla/mux"
-	// "github.com/blackpanther26/mvc/pkg/routes"
 )
 func init() {
 	config.LoadEnvVariables()
@@ -18,9 +17,8 @@ func Start() {
 	r := mux.NewRouter()
 
 	AuthRoutes(r)
-	// routes.AdminRoutes(r)
+	// AdminRoutes(r)
 	ClientRoutes(r)
-	// r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
 	port := os.Getenv("PORT")
 	if port == "" {

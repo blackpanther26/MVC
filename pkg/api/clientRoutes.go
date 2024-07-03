@@ -14,7 +14,7 @@ func ClientRoutes(r *mux.Router) {
 	client.Use(middleware.RequireAuth)
     client.Use(middleware.IsNotAdmin)
 
-	client.HandleFunc("/books", controllers.ListBooks).Methods(http.MethodGet)
+	client.HandleFunc("/", controllers.ListBooks).Methods(http.MethodGet)
 	client.HandleFunc("/books/{id}/checkout", controllers.CheckoutBook).Methods(http.MethodPost)
 	client.HandleFunc("/books/{id}/checkin", controllers.CheckinBook).Methods(http.MethodPost)
 	client.HandleFunc("/history", controllers.UserHistory).Methods(http.MethodGet)
