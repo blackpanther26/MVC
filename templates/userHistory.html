@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Borrowing History</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">Library Management System</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/client/">Home</a>
+          </li>
+          <li class="nav-item">
+            <form action="/logout" method="POST">
+              <button type="submit" class="nav-link btn btn-link">Logout</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <h2>Borrowing History</h2>
+    {{ if .Message }}
+    <div id="alertMessage" class="alert alert-{{ if eq .MessageType "success" }}success{{ else }}danger{{ end }} alert-dismissible fade show" role="alert">
+        {{ .Message }}
+        <button id="closeButton" type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+    {{ end }}
+  
+    {{ if .History }}
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Book Title</th>
+            <th>Status</th>
+            <th>Requested On</th>
+            <th>Returned On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .History }}
+            <tr>
+              <td>{{ .Book.Title }}</td>
+              <td>{{ .Status }}</td>
+              <td>{{ .TransactionDate }}</td>
+              <td>{{ if .ReturnDate }}{{ .ReturnDate }}{{ else }}Not Returned Yet{{ end }}</td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    {{ else }}
+      <p>You have no borrowing history at the moment.</p>
+    {{ end }}
+  </div>  
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.min.js"></script>
+</body>
+</html>

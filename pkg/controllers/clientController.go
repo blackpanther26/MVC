@@ -2,13 +2,14 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
-	"github.com/blackpanther26/mvc/pkg/utils"
-	"github.com/blackpanther26/mvc/pkg/types"
-	"github.com/gorilla/mux"
+
 	"github.com/blackpanther26/mvc/pkg/models"
+	"github.com/blackpanther26/mvc/pkg/types"
+	"github.com/blackpanther26/mvc/pkg/views"
+	"github.com/gorilla/mux"
 )
 
 func ListBooks(w http.ResponseWriter, r *http.Request) {
@@ -22,62 +23,57 @@ func ListBooks(w http.ResponseWriter, r *http.Request) {
 		"Books": books,
 	}
 
-	utils.RenderTemplate(w, "clientPortal", data)
+	views.RenderTemplate(w, "clientPortal", data)
 }
 
 func CheckoutBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	bookID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		utils.RenderTemplateWithMessage(w, "clientPortal", "Invalid book ID", "error")
+		views.RenderTemplateWithMessage(w, "clientPortal", "Invalid book ID", "error")
 		return
 	}
 
 	err = models.CheckoutBook(getUserIDFromContext(r.Context()), bookID)
 	if err != nil {
-		utils.RenderTemplateWithMessage(w, "clientPortal", err.Error(), "error")
+		views.RenderTemplateWithMessage(w, "clientPortal", err.Error(), "error")
 		return
 	}
 
-	utils.RenderTemplateWithMessage(w, "clientPortal", "Book checkout request sent successfully.", "success")
+	views.RenderTemplateWithMessage(w, "clientPortal", "Book checkout request sent successfully.", "success")
 }
 
 func CheckinBook(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	bookID, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, "Invalid book ID", http.StatusBadRequest)
-		return
-	}
+    vars := mux.Vars(r)
+    bookID, err := strconv.Atoi(vars["id"])
+    if err != nil {
+        views.RenderTemplateWithMessage(w, "clientPortal", "Invalid book ID", "error")
+        return
+    }
 
-	err = models.CheckinBook(bookID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    err = models.CheckinBook(bookID)
+    if err != nil {
+        views.RenderTemplateWithMessage(w, "clientPortal", err.Error(), "error")
+        return
+    }
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Book checked in successfully"}`))
+    views.RenderTemplateWithMessage(w, "clientPortal", "Book checked in successfully", "success")
 }
 
 func UserHistory(w http.ResponseWriter, r *http.Request) {
-	userID := getUserIDFromContext(r.Context())
+    userID := getUserIDFromContext(r.Context())
 
-	transactions, err := models.GetUserTransactions(userID)
-	if err != nil {
-		http.Error(w, "Failed to fetch user history", http.StatusInternalServerError)
-		return
-	}
+    transactions, err := models.GetUserTransactions(userID)
+    if err != nil {
+        http.Error(w, "Failed to fetch user history", http.StatusInternalServerError)
+        return
+    }
 
-	jsonTransactions, err := json.Marshal(transactions)
-	if err != nil {
-		http.Error(w, "Failed to marshal user history", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonTransactions)
+    data := map[string]interface{}{
+        "History": transactions,
+    }
+	fmt.Println(data)
+    views.RenderTemplate(w, "userHistory", data)
 }
 
 func getUserIDFromContext(ctx context.Context) uint {

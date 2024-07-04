@@ -4,22 +4,22 @@ import (
 	"net/http"
 	"time"
 	"github.com/blackpanther26/mvc/pkg/models"
-	"github.com/blackpanther26/mvc/pkg/utils"
+	"github.com/blackpanther26/mvc/pkg/views"
 )
 
 func SignupPageHandler(w http.ResponseWriter, r *http.Request) {
-	utils.RenderTemplate(w, "signup", nil)
+	views.RenderTemplate(w, "signup", nil)
 }
 
 func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	utils.RenderTemplate(w, "login", nil)
+	views.RenderTemplate(w, "login", nil)
 }
 
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			utils.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Failed to parse form"})
+			views.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Failed to parse form"})
 			return
 		}
 
@@ -28,26 +28,26 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		confirmPassword := r.FormValue("confirm_password")
 
 		if !isPasswordValid(password) && len(password) > 0 {
-			utils.RenderTemplate(w, "signup", map[string]interface{}{
+			views.RenderTemplate(w, "signup", map[string]interface{}{
 				"ErrorMessage": "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one digit",
 			})
 			return
 		}
 
 		if password != confirmPassword {
-			utils.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Passwords do not match"})
+			views.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Passwords do not match"})
 			return
 		}
 
 		err = models.CreateUser(username, password)
 		if err != nil {
-			utils.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Failed to create user"})
+			views.RenderTemplate(w, "signup", map[string]interface{}{"ErrorMessage": "Failed to create user"})
 			return
 		}
 
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	} else {
-		utils.RenderTemplate(w, "signup", nil)
+		views.RenderTemplate(w, "signup", nil)
 	}
 }
 
@@ -59,7 +59,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		utils.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Failed to parse form"})
+		views.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Failed to parse form"})
 		return
 	}
 
@@ -68,7 +68,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := models.AuthenticateUser(body.Username, body.Password)
 	if err != nil {
-		utils.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Invalid username or password"})
+		views.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Invalid username or password"})
 		return
 	}
 
