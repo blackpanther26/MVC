@@ -28,61 +28,58 @@ func ListBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckoutBook(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	bookID, err := strconv.Atoi(vars["id"])
-	if err!= nil {
-		http.Error(w, "Invalid book ID", http.StatusBadRequest)
-		return
-	}
+    vars := mux.Vars(r)
+    bookID, err := strconv.Atoi(vars["id"])
+    if err != nil {
+        utils.RenderTemplateWithMessage(w, "clientPortal", "Invalid book ID", "error")
+        return
+    }
 
-	var book models.Book
-	result := config.DB.First(&book, bookID)
-	if result.Error!= nil {
-		http.Error(w, "Book not found", http.StatusNotFound)
-		return
-	}
+    var book models.Book
+    result := config.DB.First(&book, bookID)
+    if result.Error != nil {
+        utils.RenderTemplateWithMessage(w, "clientPortal", "Book not found", "error")
+        return
+    }
 
-	if book.TotalCopies <= 0 {
-		http.Error(w, "No copies available for checkout", http.StatusBadRequest)
-		return
-	}
+    if book.TotalCopies <= 0 {
+        utils.RenderTemplateWithMessage(w, "clientPortal", "No copies available for checkout", "error")
+        return
+    }
 
-	var transaction models.Transaction
-	result = config.DB.Where("user_id =? AND book_id =? AND status =?", getUserIDFromContext(r.Context()), uint(bookID), "pending").First(&transaction)
-	if result.Error == nil && transaction.UserID == getUserIDFromContext(r.Context()) {
-		http.Error(w, "You already have a pending checkout request for this book.", http.StatusBadRequest)
-		return
-	}
+    var transaction models.Transaction
+    result = config.DB.Where("user_id =? AND book_id =? AND status =?", getUserIDFromContext(r.Context()), uint(bookID), "pending").First(&transaction)
+    if result.Error == nil && transaction.UserID == getUserIDFromContext(r.Context()) {
+        utils.RenderTemplateWithMessage(w, "clientPortal", "You already have a pending checkout request for this book.", "error")
+        return
+    }
 
-	tx := config.DB.Begin()
+    tx := config.DB.Begin()
 
-	// book.TotalCopies--
+    transaction = models.Transaction{
+        UserID:          getUserIDFromContext(r.Context()),
+        BookID:          uint(bookID),
+        TransactionType: "checkout",
+        TransactionDate: time.Now(),
+        DueDate:         calculateDueDate(time.Now()),
+        Status:          "pending",
+    }
 
-	transaction = models.Transaction{
-		UserID:          getUserIDFromContext(r.Context()), 
-		BookID:          uint(bookID),
-		TransactionType: "checkout",
-		TransactionDate: time.Now(),
-		DueDate:         calculateDueDate(time.Now()), 
-		Status:          "pending", 
-	}
+    if err := tx.Save(&book).Error; err != nil {
+        tx.Rollback()
+        utils.RenderTemplateWithMessage(w, "clientPortal", "Failed to update book availability", "error")
+        return
+    }
 
-	if err := tx.Save(&book).Error; err!= nil {
-		tx.Rollback()
-		http.Error(w, "Failed to update book availability", http.StatusInternalServerError)
-		return
-	}
+    if err := tx.Create(&transaction).Error; err != nil {
+        tx.Rollback()
+        utils.RenderTemplateWithMessage(w, "clientPortal", "Failed to log transaction", "error")
+        return
+    }
 
-	if err := tx.Create(&transaction).Error; err!= nil {
-		tx.Rollback()
-		http.Error(w, "Failed to log transaction", http.StatusInternalServerError)
-		return
-	}
+    tx.Commit()
 
-	tx.Commit()
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Book checkout request sent successfully."}`))
+    utils.RenderTemplateWithMessage(w, "clientPortal", "Book checkout request sent successfully.", "success")
 }
 
 func CheckinBook(w http.ResponseWriter, r *http.Request) {
