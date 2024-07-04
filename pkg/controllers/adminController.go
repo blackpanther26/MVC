@@ -24,39 +24,46 @@ func AdminListBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func AdminAddBook(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		views.RenderTemplate(w, "adminAddBook", nil)
-		return
-	}
+    if r.Method == http.MethodGet {
+        views.RenderTemplate(w, "adminAddBook", nil)
+        return
+    }
 
-	title := r.FormValue("title")
-	author := r.FormValue("author")
-	isbn := r.FormValue("isbn")
+    title := r.FormValue("title")
+    author := r.FormValue("author")
+    isbn := r.FormValue("isbn")
+    totalCopiesStr := r.FormValue("total_copies")
 
-	if len(isbn) != 14|| len(isbn) != 13 {
-		views.RenderTemplateWithMessage(w, "adminAddBook", "ISBN must be 13 characters long", "error")
-		return
-	}
+    totalCopies, err := strconv.Atoi(totalCopiesStr)
+    if err != nil {
+        views.RenderTemplateWithMessage(w, "adminAddBook", "Invalid total copies", "error")
+        return
+    }
 
-	if isbn[0] == '-' {
-		views.RenderTemplateWithMessage(w, "adminAddBook", "ISBN cannot be negative", "error")
-		return
-	}
+    if len(isbn) != 13 {
+        views.RenderTemplateWithMessage(w, "adminAddBook", "ISBN must be 13 characters long", "error")
+        return
+    }
 
-	book := types.Book{
-		Title:       title,
-		Author:      author,
-		ISBN:        isbn,
-		TotalCopies: 1,
-	}
+    if isbn[0] == '-' {
+        views.RenderTemplateWithMessage(w, "adminAddBook", "ISBN cannot be negative", "error")
+        return
+    }
 
-	err := models.AddBook(&book)
-	if err != nil {
-		views.RenderTemplateWithMessage(w, "adminAddBook", "Failed to add book", "error")
-		return
-	}
+    book := types.Book{
+        Title:       title,
+        Author:      author,
+        ISBN:        isbn,
+        TotalCopies: totalCopies,
+    }
 
-	views.RenderTemplateWithMessage(w, "adminAddBook", "Book added successfully", "success")
+    err = models.AddBook(&book)
+    if err != nil {
+        views.RenderTemplateWithMessage(w, "adminAddBook", "Failed to add book", "error")
+        return
+    }
+
+    views.RenderTemplateWithMessage(w, "adminAddBook", "Book added successfully", "success")
 }
 
 func AdminEditBook(w http.ResponseWriter, r *http.Request) {

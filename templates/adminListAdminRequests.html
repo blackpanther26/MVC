@@ -35,12 +35,7 @@
         </div>
     </nav>
     <div class="container mt-4">
-        {{ if .Message }}
-        <div class="alert alert-{{ .MessageType }} alert-dismissible fade show" role="alert">
-            {{ .Message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {{ end }}
+        <div id="alert-container"></div>
         <table class="table mt-3">
             <thead>
                 <tr>
@@ -56,10 +51,10 @@
                     <td>{{ .Status }}</td>
                     <td>
                         {{ if eq .Status "pending" }}
-                        <form action="/admin/requests/{{ .ID }}/approve" method="POST" class="d-inline">
+                        <form action="/admin/requests/{{ .ID }}/approve" method="POST" class="d-inline request-form">
                             <button type="submit" class="btn btn-success btn-action">Approve</button>
                         </form>
-                        <form action="/admin/requests/{{ .ID }}/deny" method="POST" class="d-inline">
+                        <form action="/admin/requests/{{ .ID }}/deny" method="POST" class="d-inline request-form">
                             <button type="submit" class="btn btn-danger btn-action">Deny</button>
                         </form>
                         {{ end }}
@@ -73,8 +68,31 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function () {
-            $("#closeButton").click(function () {
-                $("#alertMessage").alert('close');
+            function showAlert(message, messageType) {
+                var alertDiv = $('<div class="alert alert-' + messageType + ' alert-dismissible fade show" role="alert">' +
+                                 message +
+                                 '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                               '</div>');
+                $('#alert-container').html(alertDiv); 
+            }
+
+            $('.request-form').submit(function(event) {
+                event.preventDefault();
+
+                var form = $(this);
+                var actionUrl = form.attr('action');
+                var method = form.attr('method');
+
+                $.ajax({
+                    type: method,
+                    url: actionUrl,
+                    success: function(response) {
+                        showAlert('Transaction ' + response.status + ' successfully', 'success');
+                    },
+                    error: function() {
+                        showAlert('Failed to process request', 'danger');
+                    }
+                });
             });
         });
     </script>

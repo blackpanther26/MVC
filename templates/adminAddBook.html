@@ -38,7 +38,7 @@
                     {{ .Message }}
                     <button id="closeButton" type="button" class="btn-close" aria-label="Close"></button>
                 </div>
-                    {{ end }}
+                {{ end }}
                 <form action="/admin/books/add" method="POST">
                     <div class="mb-3">
                         <label for="title" class="form-label">Title</label>
@@ -51,6 +51,10 @@
                     <div class="mb-3">
                         <label for="isbn" class="form-label">ISBN</label>
                         <input type="text" class="form-control" id="isbn" name="isbn" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="total_copies" class="form-label">Total Copies</label>
+                        <input type="number" class="form-control" id="total_copies" name="total_copies" value="1" required />
                     </div>
                     <button type="submit" class="btn btn-primary">Add Book</button>
                 </form>
