@@ -12,6 +12,7 @@ func ClientRoutes(r *mux.Router) {
 	client := r.PathPrefix("/client").Subrouter()
 
 	client.Use(middleware.RequireAuth)
+	client.Use(middleware.NoCache)
     client.Use(middleware.IsNotAdmin)
 
 	client.HandleFunc("/", controllers.ListBooks).Methods(http.MethodGet)

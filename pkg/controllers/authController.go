@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 	"os"
 	"time"
@@ -146,17 +145,30 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Validate(w http.ResponseWriter, r *http.Request) {
-	userCtx := r.Context()
-	user := userCtx.Value("user")
+// func Validate(w http.ResponseWriter, r *http.Request) {
+// 	userCtx := r.Context()
+// 	user := userCtx.Value("user")
 
-	userJson, err := json.Marshal(user)
-	if err!= nil {
-		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
-		return
-	}
+// 	userJson, err := json.Marshal(user)
+// 	if err!= nil {
+// 		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(userJson)
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write(userJson)
+// }
+
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "Authorization",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Now().Add(-1 * time.Hour * 24),
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

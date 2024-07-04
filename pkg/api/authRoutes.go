@@ -10,4 +10,5 @@ func AuthRoutes(r *mux.Router) {
 	r.HandleFunc("/signup", controllers.SignupHandler).Methods("POST")
 	r.HandleFunc("/login", controllers.LoginPageHandler).Methods("GET")
 	r.HandleFunc("/login", controllers.LoginHandler).Methods("POST")
+	r.HandleFunc("/logout", controllers.LogoutHandler).Methods("POST")
 }
