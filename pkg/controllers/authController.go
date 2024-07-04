@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/blackpanther26/mvc/pkg/config"
-	"github.com/blackpanther26/mvc/pkg/models"
+	"github.com/blackpanther26/mvc/pkg/types"
 	"github.com/blackpanther26/mvc/pkg/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -50,7 +50,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user := models.User{
+		user := types.User{
 			Username:     username,
 			PasswordHash: string(hash),
 		}
@@ -104,7 +104,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	body.Username = r.FormValue("username")
 	body.Password = r.FormValue("password")
 
-	var user models.User
+	var user types.User
 	config.DB.First(&user, "username =?", body.Username)
 
 	if user.ID == 0 {
@@ -144,21 +144,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/client/", http.StatusSeeOther)
 	}
 }
-
-// func Validate(w http.ResponseWriter, r *http.Request) {
-// 	userCtx := r.Context()
-// 	user := userCtx.Value("user")
-
-// 	userJson, err := json.Marshal(user)
-// 	if err!= nil {
-// 		http.Error(w, "Failed to marshal user", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	w.Write(userJson)
-// }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{

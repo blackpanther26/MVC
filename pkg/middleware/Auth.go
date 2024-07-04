@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 	"github.com/blackpanther26/mvc/pkg/config"
-	"github.com/blackpanther26/mvc/pkg/models"
+	"github.com/blackpanther26/mvc/pkg/types"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -50,7 +50,7 @@ func RequireAuth(next http.Handler) http.Handler {
 				}
 			}
 
-			var user models.User
+			var user types.User
 			config.DB.First(&user, claims["sub"])
 
 			if user.ID == 0 {

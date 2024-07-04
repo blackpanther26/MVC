@@ -3,7 +3,7 @@ package config
 import (
 	"log"
 	"os"
-	"github.com/blackpanther26/mvc/pkg/models"
+	"github.com/blackpanther26/mvc/pkg/types"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -21,7 +21,7 @@ func ConnectToDb()  {
 }
 
 func SyncDatabase() {
-	err := DB.AutoMigrate(&models.User{})
+	err := DB.AutoMigrate(&types.User{})
 	if err != nil {
 		log.Fatalf("Error migrating database: %v", err)
 	}
