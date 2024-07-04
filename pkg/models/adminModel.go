@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/blackpanther26/mvc/pkg/config"
 	"github.com/blackpanther26/mvc/pkg/types"
 )
@@ -16,9 +18,40 @@ func UpdateBook(book *types.Book) error {
 }
 
 func DeleteBook(id uint) error {
-	result := config.DB.Delete(&types.Book{}, id)
-	return result.Error
+    db := config.GetDB()
+
+    tx := db.Begin()
+    if tx.Error != nil {
+        return tx.Error
+    }
+
+    var pendingCount int64
+    tx.Model(&types.Transaction{}).Where("book_id = ? AND status = ?", id, "pending").Count(&pendingCount)
+    if pendingCount > 0 {
+        tx.Rollback()
+        return errors.New("cannot delete book because it has pending transactions")
+    }
+
+    var book types.Book
+    tx.First(&book, id)
+    if book.TotalCopies > 0 {
+        var borrowedCount int64
+        tx.Model(&types.Transaction{}).Where("book_id = ? AND status = ?", id, "checked_out").Count(&borrowedCount)
+        if borrowedCount > 0 {
+            tx.Rollback()
+            return errors.New("cannot delete book because some copies are checked out")
+        }
+    }
+
+    result := tx.Delete(&types.Book{}, id)
+    if result.Error != nil {
+        tx.Rollback()
+        return result.Error
+    }
+
+    return tx.Commit().Error
 }
+
 
 func GetAllTransactions() ([]types.Transaction, error) {
 	var transactions []types.Transaction
