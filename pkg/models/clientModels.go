@@ -6,6 +6,7 @@ import (
 
 	"github.com/blackpanther26/mvc/pkg/config"
 	"github.com/blackpanther26/mvc/pkg/types"
+	"gorm.io/gorm"
 )
 
 func GetAllBooks() ([]types.Book, error) {
@@ -119,4 +120,33 @@ func GetUserTransactions(userID uint) ([]types.Transaction, error) {
 func calculateDueDate(startDate time.Time) *time.Time {
 	dueDate := startDate.AddDate(0, 0, 14)
 	return &dueDate
+}
+
+func SendAdminRequest(userID uint) error {
+	var existingRequest types.AdminRequest
+	result := config.DB.Where("user_id = ? AND status = ?", userID, "pending").First(&existingRequest)
+	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return errors.New("you already have a pending admin request")
+	}
+
+	newRequest := types.AdminRequest{
+		UserID: userID,
+		Status: "pending",
+	}
+	result = config.DB.Create(&newRequest)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+func SearchBooks(query string) ([]types.Book, error) {
+	var books []types.Book
+	searchQuery := "%" + query + "%"
+	result := config.DB.Where("title LIKE ? OR author LIKE ?", searchQuery, searchQuery).Find(&books)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return books, nil
 }

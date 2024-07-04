@@ -19,4 +19,6 @@ func ClientRoutes(r *mux.Router) {
 	client.HandleFunc("/books/{id}/checkout", controllers.CheckoutBook).Methods(http.MethodPost)
 	client.HandleFunc("/books/{id}/checkin", controllers.CheckinBook).Methods(http.MethodPost)
 	client.HandleFunc("/history", controllers.UserHistory).Methods(http.MethodGet)
+	client.HandleFunc("/requestAdmin", controllers.RequestAdmin).Methods(http.MethodPost)
+	client.HandleFunc("/search", controllers.SearchBooks).Methods(http.MethodGet)
 }

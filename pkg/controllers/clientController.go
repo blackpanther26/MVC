@@ -80,3 +80,35 @@ func getUserIDFromContext(ctx context.Context) uint {
 	user := ctx.Value("user").(types.User)
 	return user.ID
 }
+
+func RequestAdmin(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+
+	err := models.SendAdminRequest(userID)
+	if err != nil {
+		views.RenderTemplateWithMessage(w, "clientPortal", err.Error(), "error")
+		return
+	}
+
+	views.RenderTemplateWithMessage(w, "clientPortal", "Admin request sent successfully.", "success")
+}
+
+func SearchBooks(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("search")
+	if query == "" {
+		views.RenderTemplateWithMessage(w, "clientPortal", "Please enter a search term", "error")
+		return
+	}
+
+	books, err := models.SearchBooks(query)
+	if err != nil {
+		views.RenderTemplateWithMessage(w, "clientPortal", "Failed to search books", "error")
+		return
+	}
+
+	data := map[string]interface{}{
+		"Books": books,
+	}
+
+	views.RenderTemplate(w, "clientPortal", data)
+}
