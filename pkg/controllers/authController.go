@@ -82,7 +82,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookie)
 
 	if user.IsAdmin {
-		http.Redirect(w, r, "/admin", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, "/client/", http.StatusSeeOther)
 	}

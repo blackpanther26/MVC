@@ -17,7 +17,7 @@ func Start() {
 	r := mux.NewRouter()
 
 	AuthRoutes(r)
-	// AdminRoutes(r)
+	AdminRoutes(r)
 	ClientRoutes(r)
 
 	port := os.Getenv("PORT")
