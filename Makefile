@@ -20,6 +20,7 @@ confirm:
 no-dirty:
 	git diff --exit-code
 
+
 # ==================================================================================== #
 # QUALITY CONTROL
 # ==================================================================================== #
@@ -60,21 +61,9 @@ build:
 	# Include additional build steps, like TypeScript, SCSS or Tailwind compilation here...
 	go build -o=/tmp/bin/${BINARY_NAME} ${MAIN_PACKAGE_PATH}
 
-## run: run the application after prompting for DB connection details and other environment variables
+## run: run the  application
 .PHONY: run
-run: build
-	@echo "Enter application configuration details:"
-	@read -p "Port: " PORT; \
-	read -p "JWT Secret: " SECRET; \
-	echo "Enter DB connection details:"; \
-	read -p "DB Username: " DB_USERNAME; \
-	read -p "DB Password: " DB_PASSWORD; \
-	read -p "DB Host: " DB_HOST; \
-	read -p "DB Port: " DB_PORT; \
-	read -p "DB Name: " DB_NAME; \
-	export DB="${DB_USERNAME}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_NAME}?charset=utf8mb4&parseTime=True&loc=Local}"; \
-	export PORT=${PORT}; \
-	export SECRET=${SECRET}; \
+run: build-env migrate-up build
 	/tmp/bin/${BINARY_NAME}
 
 ## run/live: run the application with reloading on file changes
@@ -86,9 +75,58 @@ run/live:
 		--build.include_ext "go, tpl, tmpl, html, css, scss, js, ts, sql, jpeg, jpg, gif, png, bmp, svg, webp, ico" \
 		--misc.clean_on_exit "true"
 
+
+# ==================================================================================== #
+# DATABASE
+# ==================================================================================== #
+
+MIGRATE ?= $(shell go env GOPATH)/bin/migrate
+
+.PHONY: migrate-up migrate-down migrate-new
+
+migrate-up:
+	@echo "Running database migrations up..."
+	$(MIGRATE) -database "$(DB)" -path ./migrations up
+
+migrate-down:
+	@echo "Running database migrations down..."
+	$(MIGRATE) -database "$(DB)" -path ./migrations down
+
+migrate-new:
+	@read -p "Enter migration name: " name; \
+	$(MIGRATE) create -ext sql -dir ./migrations -seq $$name
+
 # ==================================================================================== #
 # OPERATIONS
 # ==================================================================================== #
+
+## build-env: prompt for environment variables and construct DB URL
+.PHONY: build-env
+build-env:
+	@read -p "Enter port (default: 3000): " PORT; \
+	read -p "Enter DB username (default: root): " DB_USERNAME; \
+	read -sp "Enter DB password (default: password): " DB_PASSWORD; echo; \
+	read -p "Enter DB host (default: localhost): " DB_HOST; \
+	read -p "Enter DB port (default: 3306): " DB_PORT; \
+	read -p "Enter DB name (default: bookstore): " DB_NAME; \
+	read -p "Enter JWT secret (default: your_jwt_secret): " SECRET; \
+	export PORT=$${PORT:-3000}; \
+	export DB_USERNAME=$${DB_USERNAME:-root}; \
+	export DB_PASSWORD=$${DB_PASSWORD:-password}; \
+	export DB_HOST=$${DB_HOST:-localhost}; \
+	export DB_PORT=$${DB_PORT:-3306}; \
+	export DB_NAME=$${DB_NAME:-bookstore}; \
+	export SECRET=$${SECRET:-your_jwt_secret}; \
+	export DB="$$DB_USERNAME:$$DB_PASSWORD@tcp($$DB_HOST:$$DB_PORT)/$$DB_NAME?charset=utf8mb4&parseTime=True&loc=Local"; \
+	echo "PORT=$$PORT" > .env; \
+	echo "DB_USERNAME=$$DB_USERNAME" >> .env; \
+	echo "DB_PASSWORD=$$DB_PASSWORD" >> .env; \
+	echo "DB_HOST=$$DB_HOST" >> .env; \
+	echo "DB_PORT=$$DB_PORT" >> .env; \
+	echo "DB_NAME=$$DB_NAME" >> .env; \
+	echo "DB=$$DB" >> .env; \
+	echo "SECRET=$$SECRET" >> .env; \
+	echo "Environment variables set and .env file created."
 
 ## push: push changes to the remote Git repository
 .PHONY: push
