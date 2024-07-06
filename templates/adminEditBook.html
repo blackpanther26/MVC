@@ -98,6 +98,10 @@
                 required
               />
             </div>
+            <div class="mb-3">
+              <label for="totalCopies" class="form-label">Total Copies</label>
+              <input type="number" class="form-control" id="totalCopies" name="totalCopies" value="{{ .Book.TotalCopies }}" required />
+            </div>
             <button type="submit" class="btn btn-primary">Update Book</button>
           </form>
         </div>

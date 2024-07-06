@@ -89,12 +89,18 @@ func AdminEditBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	totalCopies, err := strconv.Atoi(r.FormValue("totalCopies"))
+	if err != nil {
+		http.Error(w, "Invalid total copies value", http.StatusBadRequest)
+		return
+	}
+
 	book := types.Book{
 		ID:          uint(bookID),
 		Title:       r.FormValue("title"),
 		Author:      r.FormValue("author"),
 		ISBN:        r.FormValue("isbn"),
-		TotalCopies: 1,
+		TotalCopies: totalCopies,
 	}
 
 	err = models.UpdateBook(&book)

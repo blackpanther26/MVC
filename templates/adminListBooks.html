@@ -48,6 +48,7 @@
           <th>Title</th>
           <th>Author</th>
           <th>ISBN</th>
+          <th>Total Copies</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -57,6 +58,7 @@
           <td>{{ .Title }}</td>
           <td>{{ .Author }}</td>
           <td>{{ .ISBN }}</td>
+          <td>{{ .TotalCopies }}</td>
           <td>
             <a href="/admin/books/{{ .ID }}/edit" class="btn btn-warning">Edit</a>
             <button type="button" class="btn btn-danger" onclick="confirmDelete('{{ .ID }}')">Delete</button>
