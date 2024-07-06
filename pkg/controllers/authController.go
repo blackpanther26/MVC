@@ -27,7 +27,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		confirmPassword := r.FormValue("confirm_password")
 
-		if !isPasswordValid(password) && len(password) > 0 {
+		if !IsPasswordValid(password) && len(password) > 0 {
 			views.RenderTemplate(w, "signup", map[string]interface{}{
 				"ErrorMessage": "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one digit",
 			})
@@ -101,7 +101,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-func isPasswordValid(password string) bool {
+func IsPasswordValid(password string) bool {
 	if len(password) < 8 {
 		return false
 	}
