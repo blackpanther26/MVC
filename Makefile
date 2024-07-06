@@ -63,7 +63,7 @@ build:
 
 ## run: run the  application
 .PHONY: run
-run: build-env migrate-up build
+run: build-env migrate-up build check-migrate
 	/tmp/bin/${BINARY_NAME}
 
 ## run/live: run the application with reloading on file changes
@@ -74,7 +74,6 @@ run/live:
 		--build.exclude_dir "" \
 		--build.include_ext "go, tpl, tmpl, html, css, scss, js, ts, sql, jpeg, jpg, gif, png, bmp, svg, webp, ico" \
 		--misc.clean_on_exit "true"
-
 
 # ==================================================================================== #
 # DATABASE
@@ -138,3 +137,15 @@ push: tidy audit no-dirty
 production/deploy: confirm tidy audit no-dirty
 	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=/tmp/bin/linux_amd64/${BINARY_NAME} ${MAIN_PACKAGE_PATH}
 	upx -5 /tmp/bin/linux_amd64/${BINARY_NAME}
+
+# ==================================================================================== #
+# INSTALLATION
+# ==================================================================================== #
+
+## check-migrate: check if golang-migrate is installed, and install if not
+.PHONY: check-migrate
+check-migrate:
+	@if ! command -v migrate &> /dev/null; then \
+		echo "golang-migrate is not installed. Installing..."; \
+		go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest; \
+	fi
