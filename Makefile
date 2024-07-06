@@ -20,7 +20,6 @@ confirm:
 no-dirty:
 	git diff --exit-code
 
-
 # ==================================================================================== #
 # QUALITY CONTROL
 # ==================================================================================== #
@@ -39,7 +38,6 @@ audit:
 	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 ./...
 	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 	go test -race -buildvcs -vet=off ./...
-
 
 # ==================================================================================== #
 # DEVELOPMENT
@@ -62,9 +60,21 @@ build:
 	# Include additional build steps, like TypeScript, SCSS or Tailwind compilation here...
 	go build -o=/tmp/bin/${BINARY_NAME} ${MAIN_PACKAGE_PATH}
 
-## run: run the  application
+## run: run the application after prompting for DB connection details and other environment variables
 .PHONY: run
 run: build
+	@echo "Enter application configuration details:"
+	@read -p "Port: " PORT; \
+	read -p "JWT Secret: " SECRET; \
+	echo "Enter DB connection details:"; \
+	read -p "DB Username: " DB_USERNAME; \
+	read -p "DB Password: " DB_PASSWORD; \
+	read -p "DB Host: " DB_HOST; \
+	read -p "DB Port: " DB_PORT; \
+	read -p "DB Name: " DB_NAME; \
+	export DB="${DB_USERNAME}:${DB_PASSWORD}@tcp(${DB_HOST}:${DB_PORT})/${DB_NAME}?charset=utf8mb4&parseTime=True&loc=Local}"; \
+	export PORT=${PORT}; \
+	export SECRET=${SECRET}; \
 	/tmp/bin/${BINARY_NAME}
 
 ## run/live: run the application with reloading on file changes
@@ -75,7 +85,6 @@ run/live:
 		--build.exclude_dir "" \
 		--build.include_ext "go, tpl, tmpl, html, css, scss, js, ts, sql, jpeg, jpg, gif, png, bmp, svg, webp, ico" \
 		--misc.clean_on_exit "true"
-
 
 # ==================================================================================== #
 # OPERATIONS
