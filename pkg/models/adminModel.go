@@ -19,27 +19,41 @@ func UpdateBook(book *types.Book) error {
 
 func DeleteBook(id uint) error {
     db := config.GetDB()
-
     tx := db.Begin()
     if tx.Error != nil {
         return tx.Error
     }
 
     var pendingCount int64
-    tx.Model(&types.Transaction{}).Where("book_id = ? AND status = ?", id, "pending").Count(&pendingCount)
+    err := tx.Model(&types.Transaction{}).Where("book_id = ? AND status = ?", id, "pending").Count(&pendingCount).Error
+    if err != nil {
+        tx.Rollback()
+        return err
+    }
     if pendingCount > 0 {
         tx.Rollback()
         return errors.New("cannot delete book because it has pending transactions")
     }
 
     var book types.Book
-    tx.First(&book, id)
+    err = tx.First(&book, id).Error
+    if err != nil {
+        tx.Rollback()
+        return errors.New("book not found")
+    }
+
     if book.TotalCopies > 0 {
-        var borrowedCount int64
-        tx.Model(&types.Transaction{}).Where("book_id = ? AND status = ?", id, "checked_out").Count(&borrowedCount)
-        if borrowedCount > 0 {
+        var uncheckedInCount int64
+        err = tx.Model(&types.Transaction{}).
+            Where("book_id = ? AND transaction_type = ? AND status = ? AND return_date IS NULL", id, "checkout", "approved").
+            Count(&uncheckedInCount).Error
+        if err != nil {
             tx.Rollback()
-            return errors.New("cannot delete book because some copies are checked out")
+            return err
+        }
+        if uncheckedInCount > 0 {
+            tx.Rollback()
+            return errors.New("cannot delete book because some copies are checked out and not returned")
         }
     }
 
@@ -49,9 +63,13 @@ func DeleteBook(id uint) error {
         return result.Error
     }
 
-    return tx.Commit().Error
-}
+    err = tx.Commit().Error
+    if err != nil {
+        return err
+    }
 
+    return nil
+}
 
 func GetAllTransactions() ([]types.Transaction, error) {
 	var transactions []types.Transaction

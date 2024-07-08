@@ -31,3 +31,11 @@ func SyncDatabase() {
 func GetDB() *gorm.DB {
 	return DB
 }
+
+func GetPort() string {
+    port := os.Getenv("PORT")
+    if port == "" {
+        log.Fatal("PORT environment variable not set")
+    }
+    return port
+}

@@ -122,7 +122,7 @@ func AdminDeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	err = models.DeleteBook(uint(bookID))
 	if err != nil {
-		views.RenderTemplateWithMessage(w, "adminListBooks", "Failed to delete book", "error")
+		views.RenderTemplateWithMessage(w, "adminListBooks", "Failed to delete book: "+err.Error(), "error")
 		return
 	}
 

@@ -1,4 +1,4 @@
-AIN_PACKAGE_PATH := ./cmd/main.go
+MAIN_PACKAGE_PATH := ./cmd/main.go
 BINARY_NAME := mvc
 
 # ==================================================================================== #
