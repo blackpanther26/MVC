@@ -9,20 +9,6 @@ import (
 	"github.com/blackpanther26/mvc/pkg/types"
 )
 
-func AdminListBooks(w http.ResponseWriter, r *http.Request) {
-	books, err := models.GetAllBooks()
-	if err != nil {
-		http.Error(w, "Failed to fetch books", http.StatusInternalServerError)
-		return
-	}
-
-	data := map[string]interface{}{
-		"Books": books,
-	}
-
-	views.RenderTemplate(w, "adminListBooks", data)
-}
-
 func AdminAddBook(w http.ResponseWriter, r *http.Request) {
     if r.Method == http.MethodGet {
         views.RenderTemplate(w, "adminAddBook", nil)

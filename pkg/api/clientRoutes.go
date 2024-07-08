@@ -15,7 +15,9 @@ func ClientRoutes(r *mux.Router) {
 	client.Use(middleware.NoCache)
     client.Use(middleware.IsNotAdmin)
 
-	client.HandleFunc("/", controllers.ListBooks).Methods(http.MethodGet)
+	client.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        controllers.ListBooks(w, r, false) 
+    }).Methods(http.MethodGet)
 	client.HandleFunc("/books/{id}/checkout", controllers.CheckoutBook).Methods(http.MethodPost)
 	client.HandleFunc("/books/{id}/checkin", controllers.CheckinBook).Methods(http.MethodPost)
 	client.HandleFunc("/history", controllers.UserHistory).Methods(http.MethodGet)

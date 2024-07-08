@@ -12,18 +12,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func ListBooks(w http.ResponseWriter, r *http.Request) {
-	books, err := models.GetAllBooks()
-	if err != nil {
-		http.Error(w, "Failed to fetch books", http.StatusInternalServerError)
-		return
-	}
+func ListBooks(w http.ResponseWriter, r *http.Request, isAdmin bool) {
+    books, err := models.GetAllBooks()
+    if err != nil {
+        http.Error(w, "Failed to fetch books", http.StatusInternalServerError)
+        return
+    }
 
-	data := map[string]interface{}{
-		"Books": books,
-	}
+    var templateName string
+    if isAdmin {
+        templateName = "adminListBooks"
+    } else {
+        templateName = "clientPortal"
+    }
 
-	views.RenderTemplate(w, "clientPortal", data)
+    data := map[string]interface{}{
+        "Books": books,
+    }
+
+    views.RenderTemplate(w, templateName, data)
 }
 
 func CheckoutBook(w http.ResponseWriter, r *http.Request) {
