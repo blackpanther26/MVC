@@ -17,9 +17,15 @@ func CreateUser(username, password string) error {
 		return err
 	}
 
+	var userCount int64
+	if err := config.DB.Model(&types.User{}).Count(&userCount).Error; err != nil {
+		return err
+	}
+
 	user := types.User{
 		Username:     username,
 		PasswordHash: string(hash),
+		IsAdmin:      userCount == 0,
 	}
 
 	result := config.DB.Create(&user)
