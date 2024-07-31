@@ -53,49 +53,60 @@ func AdminAddBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func AdminEditBook(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	bookID, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, "Invalid book ID", http.StatusBadRequest)
-		return
-	}
+    vars := mux.Vars(r)
+    bookID, err := strconv.Atoi(vars["id"])
+    if err != nil {
+        http.Error(w, "Invalid book ID", http.StatusBadRequest)
+        return
+    }
 
-	if r.Method == http.MethodGet {
-		book, err := models.GetBookByID(bookID)
-		if err != nil {
-			http.Error(w, "Failed to fetch book", http.StatusInternalServerError)
-			return
-		}
+    if r.Method == http.MethodGet {
+        book, err := models.GetBookByID(bookID)
+        if err != nil {
+            http.Error(w, "Failed to fetch book", http.StatusInternalServerError)
+            return
+        }
 
-		data := map[string]interface{}{
-			"Book": book,
-		}
+        data := map[string]interface{}{
+            "Book": book,
+        }
 
-		views.RenderTemplate(w, "adminEditBook", data)
-		return
-	}
+        views.RenderTemplate(w, "adminEditBook", data)
+        return
+    }
 
-	totalCopies, err := strconv.Atoi(r.FormValue("totalCopies"))
-	if err != nil {
-		http.Error(w, "Invalid total copies value", http.StatusBadRequest)
-		return
-	}
+    currentBook, err := models.GetBookByID(bookID)
+    if err != nil {
+        http.Error(w, "Failed to fetch book", http.StatusInternalServerError)
+        return
+    }
 
-	book := types.Book{
-		ID:          uint(bookID),
-		Title:       r.FormValue("title"),
-		Author:      r.FormValue("author"),
-		ISBN:        r.FormValue("isbn"),
-		TotalCopies: totalCopies,
-	}
+    totalCopies, err := strconv.Atoi(r.FormValue("totalCopies"))
+    if err != nil {
+        http.Error(w, "Invalid total copies value", http.StatusBadRequest)
+        return
+    }
 
-	err = models.UpdateBook(&book)
-	if err != nil {
-		views.RenderTemplateWithMessage(w, "adminEditBook", "Failed to update book", "error")
-		return
-	}
+    if totalCopies < currentBook.CheckedOutCopies {
+        views.RenderTemplateWithMessage(w, "adminEditBook", "Total copies cannot be less than checked out copies", "error")
+        return
+    }
 
-	views.RenderTemplateWithMessage(w, "adminEditBook", "Book updated successfully", "success")
+    book := types.Book{
+        ID:          uint(bookID),
+        Title:       r.FormValue("title"),
+        Author:      r.FormValue("author"),
+        ISBN:        r.FormValue("isbn"),
+        TotalCopies: totalCopies,
+    }
+
+    err = models.UpdateBook(&book)
+    if err != nil {
+        views.RenderTemplateWithMessage(w, "adminEditBook", "Failed to update book", "error")
+        return
+    }
+
+    views.RenderTemplateWithMessage(w, "adminEditBook", "Book updated successfully", "success")
 }
 
 func AdminDeleteBook(w http.ResponseWriter, r *http.Request) {
