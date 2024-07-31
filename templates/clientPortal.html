@@ -81,7 +81,7 @@
               <h5 class="card-title">{{ .Title }}</h5>
               <p class="card-text">Author: {{ .Author }}</p>
               <p class="card-text">ISBN: {{ .ISBN }}</p>
-              <p class="card-text">Total copies Available: {{ .TotalCopies }}</p>
+              <p class="card-text">Total copies Available: {{ .AvailableCopies }}</p>
               <form action="/client/books/{{ .ID }}/checkout" method="POST">
                 <button type="submit" class="btn btn-primary">Check Out</button>
               </form>              

@@ -23,6 +23,10 @@ type Book struct {
 	CheckedOutCopies  int    `gorm:"default:0"`
 }
 
+func (b Book) AvailableCopies() int {
+	return b.TotalCopies - b.CheckedOutCopies
+}
+
 type Transaction struct {
 	ID              uint            `gorm:"primaryKey"`
 	UserID          uint            `gorm:"index"`

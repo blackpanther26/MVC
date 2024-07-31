@@ -37,7 +37,7 @@ func CheckoutBook(userID uint, bookID int) error {
 		return result.Error
 	}
 
-	if book.TotalCopies <= 0 {
+	if (book.TotalCopies - book.CheckedOutCopies) <= 0 {
 		tx.Rollback()
 		return errors.New("no copies available for checkout")
 	}
