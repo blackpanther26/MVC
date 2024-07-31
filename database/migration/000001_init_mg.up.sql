@@ -10,7 +10,8 @@ CREATE TABLE books (
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
     isbn VARCHAR(17) UNIQUE NOT NULL,
-    total_copies INT NOT NULL DEFAULT 1
+    total_copies INT NOT NULL DEFAULT 1,
+    checked_out_copies INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE transactions (

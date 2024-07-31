@@ -72,7 +72,7 @@ func CheckoutBook(userID uint, bookID int) error {
 	return nil
 }
 
-func CheckinBook(bookID int) error {
+func CheckinBook(bookID, userID int) error {
 	var book types.Book
 	tx := config.DB.Begin()
 
@@ -83,13 +83,12 @@ func CheckinBook(bookID int) error {
 	}
 
 	var transaction types.Transaction
-	result = tx.Where("book_id = ? AND status = 'approved'", bookID).First(&transaction)
+	result = tx.Where("book_id = ? AND user_id = ? AND status = 'approved'", bookID, userID).First(&transaction)
 	if result.Error != nil {
 		tx.Rollback()
-		return errors.New("book not checked out earlier or record not found")
+		return errors.New("book not checked out by this user or record not found")
 	}
 
-	
 	transaction.TransactionType = "checkin"
 	transaction.Status = "pending"
 	transaction.ReturnDate = func() *time.Time { t := time.Now(); return &t }()

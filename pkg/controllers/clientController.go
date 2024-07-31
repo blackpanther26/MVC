@@ -58,7 +58,19 @@ func CheckinBook(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    err = models.CheckinBook(bookID)
+    userCtx := r.Context().Value("user")
+    if userCtx == nil {
+        views.RenderTemplateWithMessage(w, "clientPortal", "User not authenticated", "error")
+        return
+    }
+
+    user, ok := userCtx.(types.User)
+    if !ok {
+        views.RenderTemplateWithMessage(w, "clientPortal", "Failed to retrieve user information", "error")
+        return
+    }
+
+    err = models.CheckinBook(bookID, int(user.ID))
     if err != nil {
         views.RenderTemplateWithMessage(w, "clientPortal", err.Error(), "error")
         return

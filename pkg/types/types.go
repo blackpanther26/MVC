@@ -20,6 +20,7 @@ type Book struct {
 	Author      string `gorm:"size:255" validate:"required"`
 	ISBN        string `gorm:"size:13;uniqueIndex" validate:"required"`
 	TotalCopies int    `gorm:"default:1" validate:"required"`
+	CheckedOutCopies  int    `gorm:"default:0"`
 }
 
 type Transaction struct {

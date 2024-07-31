@@ -24,37 +24,16 @@ func DeleteBook(id uint) error {
         return tx.Error
     }
 
-    var pendingCount int64
-    err := tx.Model(&types.Transaction{}).Where("book_id = ? AND status = ?", id, "pending").Count(&pendingCount).Error
-    if err != nil {
-        tx.Rollback()
-        return err
-    }
-    if pendingCount > 0 {
-        tx.Rollback()
-        return errors.New("cannot delete book because it has pending transactions")
-    }
-
     var book types.Book
-    err = tx.First(&book, id).Error
+    err := tx.First(&book, id).Error
     if err != nil {
         tx.Rollback()
         return errors.New("book not found")
     }
 
-    if book.TotalCopies > 0 {
-        var uncheckedInCount int64
-        err = tx.Model(&types.Transaction{}).
-            Where("book_id = ? AND transaction_type = ? AND status = ? AND return_date IS NULL", id, "checkout", "approved").
-            Count(&uncheckedInCount).Error
-        if err != nil {
-            tx.Rollback()
-            return err
-        }
-        if uncheckedInCount > 0 {
-            tx.Rollback()
-            return errors.New("cannot delete book because some copies are checked out and not returned")
-        }
+    if book.CheckedOutCopies > 0 {
+        tx.Rollback()
+        return errors.New("cannot delete book because some copies are checked out")
     }
 
     result := tx.Delete(&types.Book{}, id)
@@ -78,13 +57,42 @@ func GetAllTransactions() ([]types.Transaction, error) {
 }
 
 func UpdateTransactionStatus(transactionID uint, status string) error {
-	var transaction types.Transaction
-	result := config.DB.First(&transaction, transactionID)
-	if result.Error != nil {
-		return result.Error
-	}
-	transaction.Status = status
-	return config.DB.Save(&transaction).Error
+    var transaction types.Transaction
+    result := config.DB.First(&transaction, transactionID)
+    if result.Error != nil {
+        return result.Error
+    }
+
+    tx := config.DB.Begin()
+
+    transaction.Status = status
+    if err := tx.Save(&transaction).Error; err != nil {
+        tx.Rollback()
+        return err
+    }
+
+    var book types.Book
+    if err := tx.First(&book, transaction.BookID).Error; err != nil {
+        tx.Rollback()
+        return err
+    }
+
+    switch status {
+    case "approved":
+        if transaction.TransactionType == "checkout" {
+            book.CheckedOutCopies++
+        } else if transaction.TransactionType == "checkin" {
+            book.CheckedOutCopies--
+        }
+    }
+
+    if err := tx.Save(&book).Error; err != nil {
+        tx.Rollback()
+        return err
+    }
+
+    tx.Commit()
+    return nil
 }
 
 func GetAllAdminRequests() ([]types.AdminRequest, error) {

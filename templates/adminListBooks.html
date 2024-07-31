@@ -50,6 +50,7 @@
           <th>Author</th>
           <th>ISBN</th>
           <th>Total Copies</th>
+          <th>CheckedOutCopies</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -60,6 +61,7 @@
           <td>{{ .Author }}</td>
           <td>{{ .ISBN }}</td>
           <td>{{ .TotalCopies }}</td>
+          <td>{{ .CheckedOutCopies }}</td>
           <td>
             <a href="/admin/books/{{ .ID }}/edit" class="btn btn-warning">Edit</a>
             <form action="/admin/books/{{ .ID }}/delete" method="POST" class="d-inline">
