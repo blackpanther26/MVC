@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"time"
+
 	"github.com/blackpanther26/mvc/pkg/models"
 	"github.com/blackpanther26/mvc/pkg/views"
 )
@@ -45,7 +46,27 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		user, err := models.AuthenticateUser(username, password)
+		if err != nil {
+			views.RenderTemplate(w, "login", map[string]interface{}{"ErrorMessage": "Invalid username or password"})
+			return
+		}
+
+		token, err := models.GenerateToken(user.ID)
+		if err != nil {
+			http.Error(w, "Failed to create token", http.StatusInternalServerError)
+			return
+		}
+
+		cookie := &http.Cookie{Name: "Authorization", Value: token, Expires: time.Now().Add(24 * time.Hour)}
+		http.SetCookie(w, cookie)
+
+		if !user.IsAdmin {
+			http.Redirect(w, r, "/client/", http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, "/admin/", http.StatusSeeOther)
+		}
+
 	} else {
 		views.RenderTemplate(w, "signup", nil)
 	}
