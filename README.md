@@ -39,8 +39,8 @@ This project is a Library Management System built using the MVC architecture and
 
 1. **Clone the Repository**:
    ```sh
-   git clone git@github.com:blackpanther26/MVC.git
-   cd MVC
+   git clone <repository-url>
+   cd <repository-directory>
 
 2. **Build and Run the Application:**:
    ```sh
